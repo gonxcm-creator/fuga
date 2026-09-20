@@ -1,0 +1,149 @@
+/* Tokens de Elena + layout base extracto/tinta/papel.
+   Rojo SOLO para €/año cuando exista (día 4+). */
+:root {
+  --bg: #f4f1ea;
+  --bg-card: #fffcf7;
+  --ink: #1a1a1a;
+  --ink-muted: #5c5c5c;
+  --line: #d4cfc4;
+  --rojo-ano: #b42318;
+  --ok: #1f6b3a;
+  --focus: #1a1a1a;
+  --radius: 8px;
+  --pad: 16px;
+  --tap: 48px;
+  --font: "IBM Plex Sans", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, monospace;
+  --num: clamp(2rem, 8vw, 3.5rem);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font);
+  line-height: 1.45;
+}
+
+#app {
+  max-width: 28rem;
+  margin: 0 auto;
+  padding: var(--pad);
+  padding-bottom: calc(var(--pad) * 3);
+}
+
+h1 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0 0 0.75rem;
+}
+
+h2 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 1.25rem 0 0.5rem;
+}
+
+p,
+li {
+  color: var(--ink);
+  font-size: 1rem;
+}
+
+.muted {
+  color: var(--ink-muted);
+  font-size: 0.95rem;
+}
+
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: var(--pad);
+}
+
+.drop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 10rem;
+  margin: 1rem 0;
+  padding: var(--pad);
+  border: 2px dashed var(--line);
+  border-radius: var(--radius);
+  background: var(--bg-card);
+  text-align: center;
+  cursor: pointer;
+}
+
+.drop:focus-within,
+.drop:focus {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.drop strong {
+  font-size: 1.1rem;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--tap);
+  padding: 0 1rem;
+  margin: 0.35rem 0.35rem 0.35rem 0;
+  border: 1px solid var(--ink);
+  border-radius: var(--radius);
+  background: var(--ink);
+  color: var(--bg-card);
+  font: inherit;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.btn-secondary {
+  background: var(--bg-card);
+  color: var(--ink);
+}
+
+.list-plain {
+  margin: 0.5rem 0;
+  padding-left: 1.1rem;
+}
+
+.privacy {
+  margin-top: 1rem;
+  padding: 0.75rem var(--pad);
+  border-left: 3px solid var(--ink);
+  font-weight: 500;
+}
+
+.stub {
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+}
+
+nav.stub-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--line);
+}
+
+nav.stub-nav a {
+  color: var(--ink-muted);
+  font-size: 0.8rem;
+}
