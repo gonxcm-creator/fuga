@@ -1,135 +1,241 @@
-// Entrada de Fuga: monta rutas hash y landing con drop (sin parser).
-// Día 3 = cascarón. Parser llega en día 4.
+// Entrada de Fuga: rutas, drop→parse→informe, sin POST de movimientos.
+// Persistimos solo el informe derivado en IndexedDB.
 import './style.css'
 import { onRoute, navigate, type Route } from './router.ts'
+import { parseExtractFile, parseExtractText } from './lib/parseExtract.ts'
+import { buildReport } from './lib/buildReport.ts'
+import { saveReport, loadReport, updateRecurrentStatus, clearReport } from './lib/idb.ts'
+import { saveSettings } from './lib/settings.ts'
+import { parseEsAmount } from './lib/money.ts'
+import type { Report } from './lib/types.ts'
+import { landingHtml } from './views/landing.ts'
+import { informeHtml } from './views/informe.ts'
+import { cargoHtml } from './views/cargo.ts'
+import { comisionesHtml } from './views/comisiones.ts'
+import { guiaHtml } from './views/guia.ts'
+import { ajustesHtml } from './views/ajustes.ts'
+import { resumenHtml } from './views/resumen.ts'
+import { errorHtml } from './views/error.ts'
 
 const app = document.querySelector<HTMLDivElement>('#app')!
 
-function landing(): string {
-  return `
-    <main>
-      <div class="drop" id="drop" tabindex="0" role="button" aria-label="Soltar extracto">
-        <strong>Soltar extracto</strong>
-        <span class="muted">CSV o Excel del banco</span>
-        <span class="stub">Día 4: aquí irá el parser (hoy no lee el fichero)</span>
-        <input id="file" type="file" accept=".csv,.txt,.xlsx,.xls" hidden />
-      </div>
+let cache: Report | null = null
 
-      <h1>Ves las fugas de tu banco sin subir el extracto.</h1>
-      <ul class="list-plain">
-        <li>Recurrentes y comisiones en un vistazo</li>
-        <li>Total al mes y al año (el año, en grande)</li>
-        <li>Qué cortar primero + texto para WhatsApp</li>
-      </ul>
-
-      <h2>Qué NO hacemos</h2>
-      <ul class="list-plain muted">
-        <li>No conectamos tu banco</li>
-        <li>No cancelamos por ti</li>
-        <li>No leemos facturas mágicas</li>
-        <li>No hay cuentas ni nube</li>
-      </ul>
-
-      <p class="privacy">El extracto no sale de tu PC. Todo ocurre en este navegador.</p>
-
-      <a class="btn btn-secondary" href="#/guia">Cómo exportar</a>
-    </main>
-  `
+async function ensureReport(): Promise<Report | null> {
+  if (cache) return cache
+  cache = await loadReport()
+  return cache
 }
 
-function stub(title: string, note: string): string {
-  return `
-    <main class="card">
-      <h1>${title}</h1>
-      <p class="stub">${note}</p>
-      <a class="btn btn-secondary" href="#/">Volver al drop</a>
-    </main>
-  `
-}
-
-function render(route: Route): void {
-  switch (route) {
-    case '/':
-      app.innerHTML = landing()
-      wireDrop()
-      break
-    case '/informe':
-      app.innerHTML = stub('Informe', 'Stub. Día 4+: totales y fugas.')
-      break
-    case '/cargo':
-      app.innerHTML = stub('Ficha cargo', 'Stub. Detalle de un recurrente.')
-      break
-    case '/comisiones':
-      app.innerHTML = stub('Comisiones', 'Stub. Mantenimiento / cuota tarjeta.')
-      break
-    case '/guia':
-      app.innerHTML = stub(
-        'Cómo exportar',
-        'Stub. Guías Caixa / BBVA / Santander / Revolut / N26 (copy de Lucía).',
-      )
-      break
-    case '/ajustes':
-      app.innerHTML = stub('Ajustes', 'Stub. Sueldo neto opcional + borrar datos locales.')
-      break
-    case '/resumen':
-      app.innerHTML = stub('Resumen WhatsApp', 'Stub. Copiar plantilla (PDF después si cabe).')
-      break
-    case '/error':
-    default:
-      app.innerHTML = stub('No leí movimientos', 'Stub vacío/error. Reintentar drop o abrir guía.')
-      break
+async function ingestFile(file: File): Promise<void> {
+  const status = document.querySelector('#drop-status')
+  if (status) status.textContent = 'Leyendo en tu navegador…'
+  const result = await parseExtractFile(file)
+  if (!result.ok) {
+    navigate('/error', { errorKind: result.kind })
+    return
   }
+  const report = buildReport(result.movements)
+  cache = report
+  await saveReport(report)
+  if (report.recurrents.length === 0 && report.fees.length === 0) {
+    navigate('/informe')
+    return
+  }
+  navigate('/informe')
+}
 
-  const nav = document.createElement('nav')
-  nav.className = 'stub-nav'
-  nav.innerHTML = `
-    <a href="#/">drop</a>
-    <a href="#/informe">informe</a>
-    <a href="#/cargo">cargo</a>
-    <a href="#/comisiones">comisiones</a>
-    <a href="#/guia">guía</a>
-    <a href="#/ajustes">ajustes</a>
-    <a href="#/resumen">resumen</a>
-    <a href="#/error">error</a>
-  `
-  app.appendChild(nav)
+async function ingestDemo(): Promise<void> {
+  const status = document.querySelector('#drop-status')
+  if (status) status.textContent = 'Cargando ejemplo…'
+  try {
+    const url = `${import.meta.env.BASE_URL}demo-extracto.csv`
+    const res = await fetch(url)
+    if (!res.ok) throw new Error('demo')
+    const text = await res.text()
+    const result = await parseExtractText(text)
+    if (!result.ok) {
+      navigate('/error', { errorKind: result.kind })
+      return
+    }
+    const report = buildReport(result.movements)
+    cache = report
+    await saveReport(report)
+    navigate('/informe')
+  } catch {
+    navigate('/error', { errorKind: 'error' })
+  }
 }
 
 function wireDrop(): void {
   const drop = document.querySelector<HTMLDivElement>('#drop')
   const file = document.querySelector<HTMLInputElement>('#file')
+  const demo = document.querySelector<HTMLButtonElement>('#demo-btn')
   if (!drop || !file) return
 
   const open = () => file.click()
-  drop.addEventListener('click', open)
+  drop.addEventListener('click', (e) => {
+    if ((e.target as HTMLElement).closest('input')) return
+    open()
+  })
   drop.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault()
       open()
     }
   })
+
   ;['dragenter', 'dragover'].forEach((ev) => {
     drop.addEventListener(ev, (e) => {
       e.preventDefault()
-      drop.style.borderColor = 'var(--ink)'
+      drop.classList.add('drop-active')
     })
   })
   ;['dragleave', 'drop'].forEach((ev) => {
     drop.addEventListener(ev, (e) => {
       e.preventDefault()
-      drop.style.borderColor = '#d4cfc4'
+      drop.classList.remove('drop-active')
     })
   })
-  drop.addEventListener('drop', () => {
-    const note = drop.querySelector('.stub')
-    if (note) note.textContent = 'Archivo recibido en memoria local — parser en día 4 (no se lee aún).'
+
+  drop.addEventListener('drop', (e) => {
+    const dt = (e as DragEvent).dataTransfer
+    const f = dt?.files?.[0]
+    if (f) void ingestFile(f)
   })
+
   file.addEventListener('change', () => {
-    const note = drop.querySelector('.stub')
-    if (note) note.textContent = 'Archivo recibido en memoria local — parser en día 4 (no se lee aún).'
+    const f = file.files?.[0]
+    if (f) void ingestFile(f)
     file.value = ''
+  })
+
+  demo?.addEventListener('click', (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    void ingestDemo()
   })
 }
 
+function wireCargo(): void {
+  const box = document.querySelector('#cargo-actions')
+  if (!box) return
+  const id = box.getAttribute('data-id')
+  if (!id) return
+  box.querySelectorAll<HTMLButtonElement>('button[data-status]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const status = btn.dataset.status as 'mantener' | 'revisar' | 'cancelar'
+      cache = await updateRecurrentStatus(id, status)
+      app.innerHTML = cargoHtml(cache, id)
+      wireCargo()
+      const nav = document.createElement('nav')
+      nav.className = 'app-nav'
+      nav.setAttribute('aria-label', 'Secciones')
+      nav.innerHTML = `
+        <a href="#/">Drop</a>
+        <a href="#/informe">Informe</a>
+        <a href="#/guia">Guía</a>
+        <a href="#/ajustes">Ajustes</a>
+      `
+      app.appendChild(nav)
+    })
+  })
+}
+
+function wireAjustes(): void {
+  const form = document.querySelector<HTMLFormElement>('#settings-form')
+  form?.addEventListener('submit', (e) => {
+    e.preventDefault()
+    const input = document.querySelector<HTMLInputElement>('#salary')
+    const raw = input?.value.trim() ?? ''
+    if (!raw) {
+      saveSettings({ netSalaryCents: null })
+    } else {
+      const cents = parseEsAmount(raw)
+      if (cents == null || cents <= 0) {
+        input?.setCustomValidity('Pon un importe válido, p. ej. 1.200,00')
+        input?.reportValidity()
+        return
+      }
+      input?.setCustomValidity('')
+      saveSettings({ netSalaryCents: Math.abs(cents) })
+    }
+    navigate('/ajustes')
+    window.dispatchEvent(new HashChangeEvent('hashchange'))
+  })
+
+  document.querySelector('#clear-report')?.addEventListener('click', async () => {
+    await clearReport()
+    cache = null
+    const st = document.querySelector('#clear-status')
+    if (st) st.textContent = 'Informe local borrado.'
+  })
+}
+
+function wireResumen(): void {
+  document.querySelector('#copy-wa')?.addEventListener('click', async () => {
+    const ta = document.querySelector<HTMLTextAreaElement>('#wa-text')
+    const st = document.querySelector('#copy-status')
+    if (!ta) return
+    try {
+      await navigator.clipboard.writeText(ta.value)
+      if (st) st.textContent = 'Copiado. Pégalo en WhatsApp.'
+    } catch {
+      ta.select()
+      if (st) st.textContent = 'Seleccionado — copia con Ctrl+C / ⌘C.'
+    }
+  })
+  document.querySelector('#print-wa')?.addEventListener('click', () => window.print())
+}
+
+async function render(route: Route): Promise<void> {
+  const report = await ensureReport()
+
+  switch (route.name) {
+    case '/':
+      app.innerHTML = landingHtml()
+      wireDrop()
+      break
+    case '/informe':
+      app.innerHTML = informeHtml(report)
+      break
+    case '/cargo':
+      app.innerHTML = cargoHtml(report, route.cargoId)
+      wireCargo()
+      break
+    case '/comisiones':
+      app.innerHTML = comisionesHtml(report)
+      break
+    case '/guia':
+      app.innerHTML = guiaHtml()
+      break
+    case '/ajustes':
+      app.innerHTML = ajustesHtml()
+      wireAjustes()
+      break
+    case '/resumen':
+      app.innerHTML = resumenHtml(report)
+      wireResumen()
+      break
+    case '/error':
+    default:
+      app.innerHTML = errorHtml(route.errorKind ?? 'error')
+      break
+  }
+
+  const nav = document.createElement('nav')
+  nav.className = 'app-nav'
+  nav.setAttribute('aria-label', 'Secciones')
+  nav.innerHTML = `
+    <a href="#/">Drop</a>
+    <a href="#/informe">Informe</a>
+    <a href="#/guia">Guía</a>
+    <a href="#/ajustes">Ajustes</a>
+  `
+  app.appendChild(nav)
+}
+
 if (!location.hash) navigate('/')
-onRoute(render)
+onRoute((r) => {
+  void render(r)
+})

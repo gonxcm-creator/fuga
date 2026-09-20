@@ -1,5 +1,4 @@
-/* Tokens de Elena + layout base extracto/tinta/papel.
-   Rojo SOLO para €/año cuando exista (día 4+). */
+/* Tokens de Elena + papel/tinta. Rojo (--rojo-ano) SOLO en €/año del informe. */
 :root {
   --bg: #f4f1ea;
   --bg-card: #fffcf7;
@@ -9,6 +8,7 @@
   --rojo-ano: #b42318;
   --ok: #1f6b3a;
   --focus: #1a1a1a;
+  --disabled: #9a958c;
   --radius: 8px;
   --pad: 16px;
   --tap: 48px;
@@ -75,7 +75,7 @@ li {
   justify-content: center;
   gap: 0.5rem;
   min-height: 10rem;
-  margin: 1rem 0;
+  margin: 1rem 0 0.25rem;
   padding: var(--pad);
   border: 2px dashed var(--line);
   border-radius: var(--radius);
@@ -84,7 +84,12 @@ li {
   cursor: pointer;
 }
 
-.drop:focus-within,
+.drop.drop-active {
+  border-color: var(--ink);
+  background: #fff;
+}
+
+.drop:focus-visible,
 .drop:focus {
   outline: 2px solid var(--focus);
   outline-offset: 2px;
@@ -111,9 +116,33 @@ li {
   cursor: pointer;
 }
 
+.btn:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+summary:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.btn:disabled,
+button:disabled,
+input:disabled {
+  opacity: 1;
+  color: var(--disabled);
+  border-color: var(--disabled);
+  background: var(--bg);
+  cursor: not-allowed;
+}
+
 .btn-secondary {
   background: var(--bg-card);
   color: var(--ink);
+}
+
+.btn-secondary:disabled {
+  background: var(--bg);
 }
 
 .list-plain {
@@ -128,22 +157,192 @@ li {
   font-weight: 500;
 }
 
-.stub {
-  font-family: var(--mono);
-  font-size: 0.85rem;
-  color: var(--ink-muted);
+.linkish {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--ink);
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+  min-height: auto;
 }
 
-nav.stub-nav {
+.hero-ano {
+  margin: 1rem 0;
+  text-align: left;
+}
+
+.label-ano {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: 0.95rem;
+}
+
+.num-ano {
+  margin: 0.25rem 0;
+  font-size: var(--num);
+  font-weight: 600;
+  line-height: 1.1;
+  color: var(--rojo-ano);
+  font-variant-numeric: tabular-nums;
+}
+
+.num-ano-sm {
+  margin: 0.25rem 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.hours {
+  margin-top: 0.75rem;
+}
+
+.fuga-list,
+.hist-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.fuga-list li,
+.hist-list li {
+  border-bottom: 1px solid var(--line);
+}
+
+.fuga-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  align-items: center;
+  min-height: var(--tap);
+  padding: 0.35rem 0;
+  color: inherit;
+  text-decoration: none;
+}
+
+.fuga-name {
+  font-weight: 500;
+}
+
+.fuga-amt {
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-muted);
+  white-space: nowrap;
+}
+
+.hist-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-height: 2.5rem;
+  align-items: center;
+  padding: 0.25rem 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.actions {
+  margin-top: 1rem;
+}
+
+.help {
+  margin-top: 0.75rem;
+  border-left: 3px solid var(--ink);
+}
+
+.bank {
+  margin: 0.5rem 0;
+}
+
+.bank summary {
+  cursor: pointer;
+  min-height: var(--tap);
+  display: flex;
+  align-items: center;
+}
+
+.wa {
+  width: 100%;
+  font-family: var(--mono);
+  font-size: 0.9rem;
+  line-height: 1.4;
+  padding: var(--pad);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--bg-card);
+  color: var(--ink);
+  resize: vertical;
+}
+
+label {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 0.35rem;
+}
+
+input[type='text'] {
+  width: 100%;
+  min-height: var(--tap);
+  padding: 0 0.75rem;
+  margin-bottom: 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  font: inherit;
+  background: #fff;
+  color: var(--ink);
+}
+
+nav.app-nav {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.35rem;
+  gap: 0.75rem;
   margin-top: 1.5rem;
   padding-top: 1rem;
   border-top: 1px solid var(--line);
 }
 
-nav.stub-nav a {
+nav.app-nav a {
   color: var(--ink-muted);
-  font-size: 0.8rem;
+  font-size: 0.85rem;
+  text-decoration: none;
+  min-height: 2rem;
+  display: inline-flex;
+  align-items: center;
+}
+
+nav.app-nav a:hover {
+  color: var(--ink);
+  text-decoration: underline;
+}
+
+@media print {
+  nav.app-nav,
+  .actions,
+  .btn {
+    display: none !important;
+  }
+  body {
+    background: #fff;
+  }
+  .wa {
+    border: none;
+  }
+}
+
+/* Tokens Elena: focus / disabled */
+:root {
+  --focus-ring: 2px solid #1a1a1a;
+  --disabled-bg: #e8e4dc;
+  --disabled-ink: #9a9590;
+}
+:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 2px;
+}
+[disabled],
+.is-disabled {
+  background: var(--disabled-bg);
+  color: var(--disabled-ink);
+  pointer-events: none;
 }
