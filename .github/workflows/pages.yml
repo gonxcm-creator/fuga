@@ -1,6 +1,5 @@
 # Publica dist/ en GitHub Pages tras push a main.
 # Requiere Pages: Settings → Pages → Source = GitHub Actions.
-# Sin cache npm: evita fallo si no hay package-lock en el repo.
 name: Deploy Pages
 
 on:

@@ -4,46 +4,41 @@ PWA: sueltas el CSV/Excel del banco y ves recurrentes, comisiones y el agujero a
 
 URL: https://gonxcm-creator.github.io/fuga/
 
+## Qué hace (v0.1)
+
+- Parsea CSV/TSV/XLSX en el cliente (fechas DD/MM/YYYY, importes ES, céntimos).
+- Marca recurrentes (≥2 cargos, importe ±5% o ±0,50 €) y comisiones por palabras clave.
+- Informe: €/mes, **€/año en grande**, top fugas, ficha por cargo, texto WhatsApp.
+- Guías: CaixaBank, BBVA, Santander, Revolut, N26.
+- IndexedDB guarda **solo** el informe derivado — nunca el CSV crudo.
+- Cero POST de movimientos a un servidor.
+
 ## Stack
 
-- Vite + TypeScript
-- Hash router (`#/…`)
-- `base: /fuga/` (GitHub Pages)
-- PWA (`vite-plugin-pwa`)
-- MIT
+- Vite + TypeScript + `xlsx` · hash router · `base: /fuga/` · PWA · MIT
 
-## Qué hay hoy (Día 3)
+## Qué NO hay
 
-Cascarón: landing + drop (sin parser), stubs de rutas, Action Pages, README, LICENSE.
-
-## Qué NO hay (aún / nunca en v0.1)
-
-- Parser CSV ES (día 4)
-- PDF
-- Open Banking, login, Stripe, analytics
-- Next, Firebase, Tailwind CDN, Dexie
+- Open Banking, OCR, cuentas, Stripe, analytics
+- Next, Firebase, Dexie, Tailwind CDN
+- Cancelación automática en el banco
 
 ## Desarrollo
 
 ```bash
-npm install
-npm run dev
+npm install && npm run dev
 ```
 
-Build:
-
-```bash
-npm run build
-npm run preview
-```
-
-## Privacidad
-
-No hay servidor de app. No se hace POST de movimientos. Si DevTools muestra uno, el producto está roto.
+Demo: botón «Probar con CSV de ejemplo» (`public/demo-extracto.csv`).
 
 ## Deploy
 
-Push a `main` → workflow `.github/workflows/pages.yml` publica `dist/`.
-En el repo: Settings → Pages → Source = GitHub Actions.
+Push a `main` → Pages Action (Node 22). Settings → Pages → Source = GitHub Actions.
 
-**No hagas push hasta que Gonzalo escriba exactamente `ok push`.**
+## Roadmap v0.2 (no implementado)
+
+1. Más bancos / cabeceras CSV raras (ING, Openbank, EVO).
+2. Diccionario de comercios ampliable por el usuario (sin nube).
+3. Comparar dos periodos.
+4. Recordatorio local sin cuentas.
+5. PDF tipográfico del informe.
