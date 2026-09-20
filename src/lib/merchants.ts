@@ -1,4 +1,4 @@
-// Diccionario comercios Andrés: mapas sucio→limpio (ES habituales).
+// Diccionario comercios Andrés: 15 mapas sucio→limpio (ES habituales).
 // Se aplica tras quitar *1234 y ruido de extracto.
 export const MERCHANT_MAP: Record<string, string> = {
   'NETFLIX.COM': 'Netflix',
@@ -24,6 +24,7 @@ export const MERCHANT_MAP: Record<string, string> = {
   'ADOBE SYSTEMS': 'Adobe',
   'MICROSOFT*MICROSOFT 365': 'Microsoft 365',
 }
+
 
 const ORDERED = Object.entries(MERCHANT_MAP).sort((a, b) => b[0].length - a[0].length)
 
